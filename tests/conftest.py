@@ -15,6 +15,22 @@
 from model.config import Config
 import pytest
 import os
+import logging
+from utils.logging import setup_logging, setup_tracer
+
+from opentelemetry import trace
+from opentelemetry.trace import Tracer
+
+
+setup_logging()
+logger = logging.getLogger(__name__)
+
+
+@pytest.fixture(scope="module")
+def tracer() -> Tracer:
+    setup_tracer()
+    yield trace.get_tracer(__name__)
+
 
 @pytest.fixture(scope="module")
 def config() -> Config:
@@ -22,3 +38,5 @@ def config() -> Config:
     config = Config("env.toml")
     yield config
     
+        
+

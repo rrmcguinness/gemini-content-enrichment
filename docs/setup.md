@@ -30,6 +30,9 @@
 
 This is a poetry project run the following commands in the terminal at the project root:
 ```shell
+
+gcloud auth application-default login
+
 cd <PROJECT_ROOT>
 poetry install
 

@@ -12,88 +12,41 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-
-from pydantic import BaseModel
-import pytest
 from model.chain import Context
 from model.config import Config
+from model.examples import example_category, example_product
 from commands.enrichment import product_enrichment_from_image
 from PIL import Image
-
-"""Using pydantic here to make life easier with JSON serialization"""
-class Attribute(BaseModel):
-    name: str
-    description: str
-    value_range: list[str]
-    
-class Category(BaseModel):
-    name: str
-    attributes: list[Attribute]
-    
-class ProductAttributeValue(BaseModel):
-    name: str
-    value: str
-
-class ProductImage(BaseModel):
-    url: str
-    base64: str
-    type: str
-    
-class BaseProduct(BaseModel):
-    language: str
-    name: str
-    description: str
-    seo_html_header: str
-    attribute_values: list[ProductAttributeValue]
-    
-class Product(BaseModel):
-    base: BaseProduct
-    category: Category
-    images: list[ProductImage]
+from opentelemetry.sdk.trace import Tracer
 
 
-@pytest.fixture(scope="class")
-def apparel_image() -> Image:
-    yield Image.open("third_party/images/apparel.jpeg")
     
+def test_product_enrichment(config: Config, tracer: Tracer):
 
-@pytest.fixture(scope="class")
-def example_category() -> Category:
-    yield Category(name="Clothing > Men's Clothing > Men's Shirts > Dress Shirts", attributes=[
-        Attribute(name="Brand", description="The manufacturer of the product.", value_range=["Pronto Uomo"]),
-        Attribute(name="Size", description="The size of the garment", value_range=["S", "M", "L", "XL", "XXL"])
-    ])
-
-@pytest.fixture(scope="class")
-def example_product(example_category: Category) -> Product:
-    yield Product(base=BaseProduct(
-        language="US_EN", 
-        name="Long Sleeve Dress Shirt",
-        description="Experience timeless style and modern comfort with the Pronto Uomo Herringbone Modern Fit Long Sleeve Dress Shirt.", 
-        seo_html_header="<html><head><title></title><meta name=\"description\" content=\"\"></head><body></body></html>",
-        attribute_values=[
-            ProductAttributeValue(name="Brand", value="Pronto Uomo"),
-            ProductAttributeValue(name="Size", value="M")
-        ]),
-        category=example_category,
-        images=[])
-
-
-def test_product_enrichment(config: Config,
-                            example_category: Category,
-                            example_product: Product,
-                            apparel_image: Image):
+    # Below represents what would happen for each request and/or message
+    # 1) Build the context with the initial values
+    # 2) Execute the chain of responsibility allowing it to add values to the context
+    # 3) Finally extract the value from the chain.
     
-    category_model = example_category.model_dump_json()
-    product_attribute_value_model = example_product.model_dump_json()
-    
-    context = Context(config)
-    context.set("product_image", apparel_image)
-    context.set("category_model", category_model)
-    context.set("product_attribute_value_model", product_attribute_value_model)
-    
-    product_enrichment_from_image.execute(context=context)
-    
-    assert context.get("product_json") is not None
-    
-    print(context.get("product_json"))
+    with tracer.start_span("test_product_enrichment"):
+        # Load an image
+        apparel_image = Image.open("third_party/images/apparel.jpeg")
+        
+        # Load two example objects and get their JSON representations
+        category_model = example_category.model_dump_json()
+        product_attribute_value_model = example_product.model_dump_json()
+        
+        # Create the context
+        context = Context(config)
+        context.set("product_image", apparel_image)
+        context.set("category_model", category_model)
+        context.set("product_attribute_value_model", product_attribute_value_model)
+        
+        # Execute the Chain of responsibility
+        product_enrichment_from_image.execute(context=context)
+        
+        # Verify the content was created
+        assert context.get("product_json") is not None
+        
+        # Print the output
+        print(context.get("product_json"))
