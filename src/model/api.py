@@ -20,6 +20,9 @@ import logging
 logger = logging.getLogger(__name__)
 
 class TomlClass:
+    """
+    This is the parent class for TOML classes being read for configuration.
+    """
     def __init__(self, d: Dict[str, any] = None):
         if d is not None:
             for k, v in d.items():

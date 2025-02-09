@@ -16,6 +16,7 @@ GTIN_LENGTH = 14
 GTIN_RIGHT_PAD = '0'
 
 def fix_gtin(gtin: str) -> str:
+    """Fixes mixed length GTINs to 14 digits left padded with zeros."""
     if gtin:
         return gtin.rjust(GTIN_LENGTH, GTIN_RIGHT_PAD)
     else:

@@ -22,6 +22,12 @@ from model.config import Config
 VARIABLE_EXPANSION_PATTERN = r"\$\{(.+?)\}"
 
 class Context():
+    """
+    Context is the async state holder for per-request workflows.
+    The context is the only mutable object in any workflow, while
+    the commands and chains are immutable. This allows the effective-final
+    pattern for realizing high volume parallelism.
+    """
     def __init__(self, config: Config):
         super().__init__()
         self.state: dict[str, Any] = {}
@@ -52,6 +58,12 @@ class Context():
 
 
 class Command():
+    """
+    Represents a single, testable, unit of work (see Command Pattern). Commands work upon the context,
+    and hold little to no state of their own, and never persistent state, meaning
+    the state of the command state IS NOT passivated or activated from serialization.
+    Or simply put, the command state is renewed every time is is created.
+    """
     def __init__(self, name: str, func: Callable[[Context], None]):
         super().__init__()
         self.name = name
@@ -64,6 +76,12 @@ class Command():
         
     
 class Chain(Command):
+    """
+    Is a collection of commands that are executed according to the execution strategy.
+    This simple chain uses serial execution, allowing each command to decide if it should
+    be executed or skipped. Since a chain IS-A command, you may create chain-or-chains
+    allowing for complex execution over a per-request payload.
+    """
     def __init__(self, name: str, *args: Command):
         super().__init__(name=name, func=self.execute)
         self.commands: list[Command] = args

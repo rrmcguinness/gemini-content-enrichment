@@ -17,7 +17,7 @@ import argparse
 import getpass
 
 from model.config import Config
-import utils.ezcrypt
+import utils.ezcrypt as crypt
 import api.server as api_server
 from utils.logging import setup_logging
 
@@ -51,7 +51,7 @@ def initialize_password_functions(subparsers):
                                              help='Encrypts password with local salt, not good enough for production environments unless the salt and password are separated.')
 
     encrypt_password.add_argument("-s", "--salt", help='The salt for the password',
-                                  default=utils.ezcrypt.generate_random_string(DEFAULT_SALT_LENGTH))
+                                  default=crypt.generate_random_string(DEFAULT_SALT_LENGTH))
     
 
 def initialize_api_functions(subparsers):
@@ -78,12 +78,12 @@ def main():
         case 'encrypt-password':
             password = getpass.getpass(prompt="Enter password: ")
             print("Salt: {}".format(args.salt))
-            print("Encrypted Password: {}".format(utils.ezcrypt.encrypt(password, args.salt)))
+            print("Encrypted Password: {}".format(crypt.encrypt(password, args.salt)))
         case 'generate-salt':
-            print("Salt: ", utils.ezcrypt.generate_random_string(DEFAULT_SALT_LENGTH))
+            print("Salt: ", crypt.generate_random_string(DEFAULT_SALT_LENGTH))
         case 'api-server':
             print(f'Starting Server: {args.ip}:{args.port}')
-            api_server.start(config, args.ip, args.port, args.reload)
+            api_server.start(args.ip, args.port, args.reload)
 
 if __name__ == "__main__":
     main()

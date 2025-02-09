@@ -17,24 +17,42 @@ from pydantic import BaseModel
 
 
 class Attribute(BaseModel):
+    """
+    A simplified attribute object with 'possible' value ranges,
+    not to be confused with a product attribute which is a realized value range.
+    """
     name: str
     description: str
     value_range: list[str]
     
 class Category(BaseModel):
+    """
+    A simple struct for encapsulating the rules for a category.
+    """
     name: str
     attributes: list[Attribute]
     
 class ProductAttributeValue(BaseModel):
+    """
+    Unlike the Attribute above, this holds the value for the product vs a possible range.
+    """
     name: str
     value: str
 
 class ProductImage(BaseModel):
+    """
+    A simple structure for describing an image. The base64 attribute is used for RAW
+    API execution which is now wrapped in a PIL Image from the latest API.
+    """
     url: str
     base64: str
     type: str
     
 class BaseProduct(BaseModel):
+    """
+    Is the product instance values for a product, allowing the Product to encapsulate
+    additional product references without creating circular dependencies.
+    """
     language: str
     name: str
     description: str
@@ -42,9 +60,14 @@ class BaseProduct(BaseModel):
     attribute_values: list[ProductAttributeValue]
     
 class Product(BaseModel):
+    """
+    Represents a more complex product hierarchy that may contain additional product relationships.
+    """
     base: BaseProduct
     category: Category
     images: list[ProductImage]
+    related_products: list["Product"]
+    derived_products: list["Product"]
     
     
 example_category = Category(name="Clothing > Men's Clothing > Men's Shirts > Dress Shirts", attributes=[
@@ -62,4 +85,4 @@ example_product = Product(base=BaseProduct(
             ProductAttributeValue(name="Size", value="M")
         ]),
         category=example_category,
-        images=[])
+        images=[], derived_products=[], related_products=[])

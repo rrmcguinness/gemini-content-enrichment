@@ -26,24 +26,16 @@ app = FastAPI(title="Gemini Content Enrichment")
 app.include_router(api_checks(config))
 app.include_router(products(app, config))
 
-def register_listeners(config: Config):
-    print("Dude where's my router")
-
-def start(config: Config, host: str, port: int, reload: bool):
-    
+def start(host: str, port: int, reload: bool):
+    """Starts the server"""
     try:
         setup_logging()
         setup_tracer(config)
     except Exception as e:
         print(e)
-
-    register_listeners(config)
-    
     
     """Starts the server in dev mode"""
     uvicorn.run("api.server:app", host=host, port=port, reload=reload)
     
 if __name__ == "__main__":
-    config = Config("env.toml")
-    register_listeners(config)
-    start(config, "127.0.0.1", 8000, reload=True)
+    start("127.0.0.1", 8000, reload=True)

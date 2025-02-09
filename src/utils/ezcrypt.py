@@ -14,6 +14,8 @@
 import string
 import random
 
+# A simple utility for not storing passwords or keys in plain text.
+
 DEFAULT_ENCODING = 'utf-8'
 ENC_PREFIX = "ENC:"
 

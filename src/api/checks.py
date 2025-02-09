@@ -15,6 +15,7 @@
 from fastapi import status, APIRouter, FastAPI
 
 def register(app: FastAPI) -> APIRouter:
+    """ API routes for health checks"""
     router = APIRouter()
         
     @router.get("/readiness_check", status_code=status.HTTP_200_OK, tags=["Status Checks"])

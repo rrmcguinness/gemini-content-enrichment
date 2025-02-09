@@ -43,6 +43,7 @@ METER_PROVIDER: MeterProvider = None
 
 
 def setup_logging():
+    """Initializes the python logger for using Google Cloud Logging."""
     LoggingInstrumentor().instrument()
 
     logHandler = logging.StreamHandler()
@@ -66,6 +67,7 @@ def setup_logging():
 
 
 def setup_tracer():
+    """Initializes the trace utility for using Google Cloud Trace"""
     credentials, project_id = google.auth.default()
     logging.info(f"Project Name: {project_id}")
     

@@ -26,16 +26,20 @@ EMPTY_STRING = ""
 
 
 def fix_prompt(value: str) -> str:
+    """Fixes multiline prompts removing excess characters"""
     value = value.strip()
     value = "\n".join(map(lambda x: x.strip(), value.split("\n")))
     return value
 
 def fix_output(value: str) -> str:
+    """Removes excess text from bad response types not honoring structured data requests """
     value = value.replace(PREFIX_MD_JSON, EMPTY_STRING)
     value = value.replace(SUFFIX_MD_CODE, EMPTY_STRING)
     return value
 
 def get_env_file_name(file_name: str) -> str:
+    """A utility for determining the runtime of a configuration using environment variables
+    and defaulting to 'local' if not present."""
     env = os.environ.get(ENV_VAR_GCP_RUNTIME_ENV, ENV_DEFAULT_RUNTIME)
 
     env_file = None

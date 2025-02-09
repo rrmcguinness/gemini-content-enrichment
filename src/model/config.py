@@ -26,6 +26,9 @@ from utils.strings import get_env_file_name
 
 
 class Application(TomlClass):
+    """
+    Represents the cloud application
+    """
     project_id: str
     location: str
     salt: str
@@ -33,6 +36,9 @@ class Application(TomlClass):
     thread_pool_size: int
 
 class Embedding(TomlClass):
+    """
+    Represents a class capable of generating text embeddings from a given model.
+    """
     client: genai.Client
     model_name: str
     
@@ -51,6 +57,12 @@ class Embedding(TomlClass):
     
 
 class ContentGenerator(TomlClass):
+    """
+    Represents a class capable of generating text from the given model and context
+    via the prompt. With the recent changes to the API, it's no longer beneficial
+    (or possible) to create a running agent with instructions, but instead to add
+    the instructions and settings per request.
+    """
     client: genai.Client
     model_name: str
     ground_with_google: bool
@@ -102,6 +114,7 @@ class ContentGenerator(TomlClass):
         )
     
     def generate_content(self, prompt: str) -> str:
+        """A simple method for generating responses from prompts"""
         response =self.client.models.generate_content(
             model=self.model_name,
             config=self.get_generative_config(),
@@ -109,6 +122,7 @@ class ContentGenerator(TomlClass):
         return response.text
     
     def understand_image(self, prompt: str, image: Image):
+        """A simple method for generating responses from prompts and an image"""
         response =self.client.models.generate_content(
             model=self.model_name,
             config=self.get_generative_config(),
@@ -116,6 +130,10 @@ class ContentGenerator(TomlClass):
         return response.text
     
     def understand_video(self, prompt: str, video_path: str):
+        """
+        A simple method for generating responses from prompt and a video file.
+        Note: the video file should be uploaded and removed from the service.
+        """
         video_file = self.client.files.upload(path=video_path)
         while video_file.state.name == "PROCESSING":
             print('.', end='')
@@ -136,14 +154,24 @@ class ContentGenerator(TomlClass):
         
 
 class NamedPrompt(TomlClass):
+    """
+    A class for holding prompts by name in the configuration files.
+    """
     name: str
     prompt: str
     
 class GenerativeAI(TomlClass):
+    """
+    A wrapper class for Generative structures.
+    """
     embedding: Embedding
     generators: dict[str, ContentGenerator]
 
 class Config():
+    """
+    The overall configuration object including it's initializer and initialization strategy.
+    
+    """
     application: Application
     generative_ai: GenerativeAI
     prompts: list[NamedPrompt]
