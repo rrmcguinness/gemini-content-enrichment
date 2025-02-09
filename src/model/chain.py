@@ -57,9 +57,9 @@ class Command():
         self.name = name
         self.func = func
     
-    def execute(self, context: Context):
+    async def execute(self, context: Context):
         trace.get_current_span().set_attribute("command.context_size", len(context.state))
-        self.func(context)
+        await self.func(context)
 
         
     
@@ -77,11 +77,11 @@ class Chain(Command):
     def remove_command(self, command: Command):
         self.commands.remove(command)
         
-    def execute(self, context: Context):
+    async def execute(self, context: Context):
         trace.get_current_span().add_event("chain_start", self.name)
         for command in self.commands:
             trace.get_current_span().add_event("command_start", command.name)
-            command.execute(context)
+            await command.execute(context)
             trace.get_current_span().add_event("command_finish", command.name)
         trace.get_current_span().add_event("chain_finish", self.name)
  

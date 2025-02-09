@@ -21,26 +21,26 @@ from PIL import Image
 from google import genai
 from google.genai import types
 
+from utils.ezcrypt import decrypt
 from utils.strings import get_env_file_name
 
 
 class Application(TomlClass):
     project_id: str
     location: str
+    salt: str
+    api_key: str
     thread_pool_size: int
 
-
 class Embedding(TomlClass):
-    project_id: str
-    api_key: str
     client: genai.Client
     model_name: str
     
     def __init__(self, d = None):
         super().__init__(d)
         
-    def initialize_client(self) -> None:
-         self.client = genai.Client(api_key=self.api_key)
+    def initialize_client(self, api_key: str) -> None:
+         self.client = genai.Client(api_key=api_key)
 
     def generate_text_embeddings(self, value: str):
         result = self.client.models.embed_content(
@@ -55,7 +55,6 @@ class ContentGenerator(TomlClass):
     model_name: str
     ground_with_google: bool
     instructions: str
-    api_key: str
     temperature: float
     top_p: float
     top_k: float
@@ -65,9 +64,9 @@ class ContentGenerator(TomlClass):
     def __init__(self, d = None):
         super().__init__(d)
 
-    def initialize_client(self) -> None:
+    def initialize_client(self, api_key: str) -> None:
         if (not hasattr(self, 'client') or self.client is None):
-            self.client = genai.Client(api_key=self.api_key)
+            self.client = genai.Client(api_key=api_key)
 
     def get_generative_config(self) -> types.GenerateContentConfig:
         return types.GenerateContentConfig(
@@ -103,7 +102,6 @@ class ContentGenerator(TomlClass):
         )
     
     def generate_content(self, prompt: str) -> str:
-        self.initialize_client()
         response =self.client.models.generate_content(
             model=self.model_name,
             config=self.get_generative_config(),
@@ -111,7 +109,6 @@ class ContentGenerator(TomlClass):
         return response.text
     
     def understand_image(self, prompt: str, image: Image):
-        self.initialize_client()
         response =self.client.models.generate_content(
             model=self.model_name,
             config=self.get_generative_config(),
@@ -119,7 +116,6 @@ class ContentGenerator(TomlClass):
         return response.text
     
     def understand_video(self, prompt: str, video_path: str):
-        self.initialize_client()
         video_file = self.client.files.upload(path=video_path)
         while video_file.state.name == "PROCESSING":
             print('.', end='')
@@ -139,7 +135,6 @@ class ContentGenerator(TomlClass):
         return response.text
         
 
-       
 class NamedPrompt(TomlClass):
     name: str
     prompt: str
@@ -159,6 +154,7 @@ class Config():
         with open(file_name, "rb") as f:
             print("Loading configuration from file: ", file_name)
             data = tomllib.load(f)
+            
             setattr(self, "application", Application(data.get("application")))
             
             prompts = []
@@ -182,6 +178,7 @@ class Config():
             with open(env_file_name, "rb") as f:
                 print("Loading environment config file: ", env_file_name)
                 data = tomllib.load(f)
+                
                 self.application.updateValues(data.get("application"))
                 
                 if data.get("prompts") is not None:
@@ -199,9 +196,7 @@ class Config():
                 
                 if data.get("generative_ai") is not None:
                     if data.get("generative_ai")["embedding"] is not None:
-                        self.generative_ai.embedding.updateValues(
-                            data.get("generative_ai")["embedding"]
-                        )
+                        self.generative_ai.embedding.updateValues(data.get("generative_ai")["embedding"])
                         
                     if data.get("generative_ai")["generators"] is not None:
                         for k, g in self.generative_ai.generators:
@@ -209,14 +204,10 @@ class Config():
                                 g.updateValues(data.get("generative_ai")["generators"][k])
                                 
         if self.generative_ai.embedding is not None:
-            self.generative_ai.embedding.project_id = self.application.project_id
-            self.generative_ai.embedding.api_key = self.application.api_key
-            self.generative_ai.embedding.initialize_client()
+            self.generative_ai.embedding.initialize_client(decrypt(self.application.api_key, self.application.salt))
             
         for k, g in self.generative_ai.generators.items():
-            g.project_id = self.application.project_id
-            g.api_key = self.application.api_key
-            g.initialize_client()
+            g.initialize_client(decrypt(self.application.api_key, self.application.salt))
             
     def get_prompt_by_name(self, name: str) -> NamedPrompt:
         for p in self.prompts:

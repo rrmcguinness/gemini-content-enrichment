@@ -18,10 +18,11 @@ from model.examples import example_category, example_product
 from commands.enrichment import product_enrichment_from_image
 from PIL import Image
 from opentelemetry.sdk.trace import Tracer
+import pytest
 
 
-    
-def test_product_enrichment(config: Config, tracer: Tracer):
+@pytest.mark.asyncio
+async def test_product_enrichment(config: Config, tracer: Tracer):
 
     # Below represents what would happen for each request and/or message
     # 1) Build the context with the initial values
@@ -43,7 +44,7 @@ def test_product_enrichment(config: Config, tracer: Tracer):
         context.set("product_attribute_value_model", product_attribute_value_model)
         
         # Execute the Chain of responsibility
-        product_enrichment_from_image.execute(context=context)
+        await product_enrichment_from_image.execute(context=context)
         
         # Verify the content was created
         assert context.get("product_json") is not None

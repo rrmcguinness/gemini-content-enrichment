@@ -15,6 +15,7 @@ import string
 import random
 
 DEFAULT_ENCODING = 'utf-8'
+ENC_PREFIX = "ENC:"
 
 def generate_random_string(length):
     letters = string.ascii_letters + string.digits  # Alphanumeric characters
@@ -33,8 +34,15 @@ def __xor_encrypt_decrypt(text, key):
     return result_bytes
 
 def encrypt(text, key):
-    return (__xor_encrypt_decrypt(text, key)).hex()
+    if isinstance(text, str):
+        return f"{ENC_PREFIX}{(__xor_encrypt_decrypt(text, key)).hex()}"
+    else:
+        to_enc = "" + text
+        return f"{ENC_PREFIX}{(__xor_encrypt_decrypt(to_enc, key)).hex()}"
 
 def decrypt(text, key):
-    converted = hex_to_string(text)
-    return (__xor_encrypt_decrypt(converted, key)).decode(DEFAULT_ENCODING)
+    if isinstance(text, str) and text.startswith(ENC_PREFIX):
+        to_dec = text[len(ENC_PREFIX):]
+        converted = hex_to_string(to_dec)
+        return (__xor_encrypt_decrypt(converted, key)).decode(DEFAULT_ENCODING)
+    return text

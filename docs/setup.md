@@ -50,7 +50,20 @@ Before running the pytests, you'll need to configure a test configuration file.
 
 Create a test configuration file `env.test.toml` and add your project_id and api_key:
 
-env.test.toml
+**env.test.toml**
+```toml
+[application]
+project_id = ""
+api_key = ""
+```
+
+### Runtime
+
+Create a second configuration file in the root directory called `env.local.toml` and add your project_id and api_key. The contents of these two files MAY be the same, but should have different
+API keys with 
+
+
+**env.local.toml**
 ```toml
 [application]
 project_id = ""
@@ -59,15 +72,3 @@ api_key = ""
 
 > NOTE: The configuration loader will first load "env.toml" and then override values with
 > the environment specific toml file.
-
-#### Running the unit tests
-
-```shell
-# execute the tests while hiding test stdout
-poetry run pytest
-
-# execute the tests and see the test stdout
-poetry run pytest -s
-```
-
-

@@ -16,7 +16,7 @@ from model.chain import Chain, Context, Command
 
 
 
-def category_detection_from_image(context: Context) -> None:
+async def category_detection_from_image(context: Context) -> None:
     """Using the context variables:
     * product_image
     * category_model
@@ -27,7 +27,7 @@ def category_detection_from_image(context: Context) -> None:
     context.set("category_attributes", generator.understand_image(prompt, context.get("product_image")))
     
     
-def extract_product_details(context: Context) -> None:
+async def extract_product_details(context: Context) -> None:
     """ Using the category attributes, create a product detail using:
     IN
     * category_attributes
@@ -41,7 +41,7 @@ def extract_product_details(context: Context) -> None:
     context.set("product_json", generator.generate_content(prompt))
 
 
-def extract_languages(context: Context) -> None:
+async def extract_languages(context: Context) -> None:
     languages = context.get("languages")
     if languages is not None:
         generator = context.get_config().get_generator_by_name("flash")
