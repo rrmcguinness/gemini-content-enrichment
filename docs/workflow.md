@@ -37,6 +37,7 @@ classDiagram
         +get_errors(): -> list[Exception]
         +expand_variables(input: str) -> str
     }
+    note "The func is wrapped in Google Cloud trace\nas the implementation of wiretap."
     class Command {
         +name : str
         +func : Callable[[Context], None]
