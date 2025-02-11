@@ -48,7 +48,10 @@ class Context():
         
     def get(self, key: str, default=None) -> Any:
         return self.state.get(key, default)
-
+    
+    def has_key(self, key: str) -> bool:
+        return key in self.state and self.state[key] is not None
+    
     def expand_variables(self, input: str):
         def replace_match(match):
             key = match.group(1)

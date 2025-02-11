@@ -35,7 +35,6 @@ def test_config(config: Config) -> None:
     
     joke = config.generative_ai.generators["flash"].generate_content("Tell me a funny joke.")
 
-    
     assert joke is not None
     
     print("Joke: ", joke)

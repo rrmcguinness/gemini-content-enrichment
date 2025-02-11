@@ -15,7 +15,7 @@
 from model.chain import Context
 from model.config import Config
 from model.examples import example_category, example_product
-from commands.enrichment import product_enrichment_from_image
+from commands.main import product_enrichment_from_image
 from PIL import Image
 from opentelemetry.sdk.trace import Tracer
 import pytest

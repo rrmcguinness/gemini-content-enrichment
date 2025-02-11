@@ -52,12 +52,3 @@ async def extract_languages(context: Context) -> None:
                 prompt = context.expand_variables(prompt_template.prompt)
                 context.set("language_{language}", generator.generate_content(prompt))  
             
-
-# A collection of command objects that can be reused in multiple chains
-category_detector = Command('category-detection', category_detection_from_image)
-content_enricher = Command('content-enricher)', extract_product_details)
-language_extractor = Command('language-extractor', extract_languages)
-
-
-# A simple chain of responsibility that executes the commands in series
-product_enrichment_from_image = Chain("product-enrichment-from-image", category_detector, content_enricher, language_extractor)
