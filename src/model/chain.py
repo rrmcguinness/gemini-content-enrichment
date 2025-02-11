@@ -66,14 +66,15 @@ class Command():
     the state of the command state IS NOT passivated or activated from serialization.
     Or simply put, the command state is renewed every time it's created.
     """
-    def __init__(self, name: str, func: Callable[[Context], None]):
+    def __init__(self, name: str, func: Callable[[Context], None]|None):
         super().__init__()
         self.name = name
         self.func = func
     
     async def execute(self, context: Context):
-        trace.get_current_span().set_attribute("command.context_size", len(context.state))
-        self.func(context)
+        if self.func is not None:
+            trace.get_current_span().set_attribute("command.context_size", len(context.state))
+            self.func(context)
 
         
     
@@ -85,7 +86,7 @@ class Chain(Command):
     allowing for complex execution over a per-request payload.
     """
     def __init__(self, name: str, *args: Command):
-        super().__init__(name=name, func=self.execute)
+        super().__init__(name=name, func=None)
         self.commands: list[Command] = args
     
     def get_commands(self) -> list[Command]:
@@ -98,11 +99,11 @@ class Chain(Command):
         self.commands.remove(command)
 
     async def execute(self, context: Context):
-        trace.get_current_span().add_event("chain_start", self.name)
+        trace.get_current_span().add_event("chain_start: {name}", { "name": self.name })
         for command in self.commands:
-            trace.get_current_span().add_event("command_start", command.name)
+            trace.get_current_span().add_event("command_start: {command}", { "command": command.name })
             await command.execute(context)
-            trace.get_current_span().add_event("command_finish", command.name)
-        trace.get_current_span().add_event("chain_finish", self.name)
+            trace.get_current_span().add_event("command_finish: {command}", { "command": command.name })
+        trace.get_current_span().add_event("chain_finish: {name}", { "name": self.name })
  
             

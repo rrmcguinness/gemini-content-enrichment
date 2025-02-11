@@ -20,6 +20,8 @@ sender of a request to its receiver by giving multiple objects a chance to handl
 * The **Command** pattern encapsulates a request as an object, thereby allowing for parameterizing 
 clients with queues, requests, and operations. It decouples the object that invokes the operation
 from the one that knows how to perform it.
+* The **Wiretap**  intercepts and examines data flowing through a system without altering its primary flow.
+It's used for monitoring, debugging, or auditing purposes by passively observing data transmissions.
 
 ```mermaid
 classDiagram
