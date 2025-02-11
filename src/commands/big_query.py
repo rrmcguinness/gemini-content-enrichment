@@ -38,7 +38,7 @@ class BQPersistenceCommand(Command):
                  json_schema: str | None,
                  create_table_if_not_exists: bool = False):
         
-        super().__init__(name, self.execute)
+        super().__init__(name, self.do_execute)
         self.fqtn = FQTN(project_id, dataset_name, table_name)
         self.json_schema = json_schema
         self.create_table_if_not_exists = create_table_if_not_exists
@@ -46,20 +46,20 @@ class BQPersistenceCommand(Command):
         self.input_variable_name = input_variable_name
         
         
-        async def execute(self, context: Context):
-            if not self.table_created and self.create_table_if_not_exists and json_schema is not None:
-                with tempfile.TemporaryFile(mode="w+") as fp:
-                    fp.write(json_schema)
-                    fp.seek(0)
-                    bigquery_client.schema_from_json(fp)
-                    bigquery_client.create_table(self.fqtn, exists_ok=True)
-                    self.table_created = True
-            
-            if context.has_key(self.input_variable_name):
-                if isinstance(context.get(self.input_variable_name), list):
-                    bigquery_client.insert_rows_json(self.fqtn, [context.get(self.input_variable_name)])
-                else:
-                    bigquery_client.insert_rows_json(self.fqtn, context.get(self.input_variable_name))
+    def do_execute(self, context: Context):
+        if not self.table_created and self.create_table_if_not_exists and self.json_schema is not None:
+            with tempfile.TemporaryFile(mode="w+") as fp:
+                fp.write(self.json_schema)
+                fp.seek(0)
+                bigquery_client.schema_from_json(fp)
+                bigquery_client.create_table(self.fqtn, exists_ok=True)
+                self.table_created = True
+
+        if context.has_key(self.input_variable_name):
+            if isinstance(context.get(self.input_variable_name), list):
+                bigquery_client.insert_rows_json(self.fqtn, [context.get(self.input_variable_name)])
+            else:
+                bigquery_client.insert_rows_json(self.fqtn, context.get(self.input_variable_name))
     
                     
 class BQEnrichmentCommand(Command):
@@ -72,12 +72,12 @@ class BQEnrichmentCommand(Command):
                  table_name: str, 
                  query: str, 
                  output_variable_name: str) -> None:
-        super().__init__(name, self.execute)
+        super().__init__(name, self.do_execute)
         self.fqtn = FQTN(project_id, dataset_name, table_name)
         self.query = query
         self.output_variable_name = output_variable_name
         
-    async def execute(self, context: Context):
+    def do_execute(self, context: Context):
        query_text = f"SELECT * from `{self.fqtn}` {super.expand_variables(self.query, context)}"
        
        out = []

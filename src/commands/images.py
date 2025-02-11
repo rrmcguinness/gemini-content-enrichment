@@ -28,12 +28,13 @@ def get_filename_from_url(url):
 storage_client = storage.Client()
 
 class ImageDownloadCommand(Command):
-    def __init__(self, 
+
+    def __init__(self,
                  name: str, 
                  input_variable_name: str, 
                  output_variable_name: str,
                  storage_bucket_name: str, prefix: str, suffix: str):
-        super(name, self.execute)
+        super(name, self.do_execute)
         self.input_variable_name  = input_variable_name
         self.output_variable_name = output_variable_name
         self.storage_bucket_name  = storage_bucket_name
@@ -49,12 +50,15 @@ class ImageDownloadCommand(Command):
                 print(e)
         
     
-    async def execute(self, context: Context):
+    def do_execute(self, context: Context):
         """
         Takes a list of URLs, downloads them to a storage bucket and returns a map of:
         {
             "original_file_name": "gcs_path"
         }
+        Where:
+        * Original file name is the file name minus the URL prefix.
+        * gcs_path = bucket + prefix + file_name + suffix
         """
         
         if context.has_key(self.input_variable_name):

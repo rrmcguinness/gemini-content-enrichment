@@ -11,7 +11,7 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-
+import asyncio
 import re
 from typing import Callable, Any
 
@@ -59,13 +59,12 @@ class Context():
 
         return re.sub(VARIABLE_EXPANSION_PATTERN, replace_match, input)
 
-
 class Command():
     """
     Represents a single, testable, unit of work (see Command Pattern). Commands work upon the context,
     and hold little to no state of their own, and never persistent state, meaning
     the state of the command state IS NOT passivated or activated from serialization.
-    Or simply put, the command state is renewed every time is is created.
+    Or simply put, the command state is renewed every time it's created.
     """
     def __init__(self, name: str, func: Callable[[Context], None]):
         super().__init__()
@@ -74,7 +73,7 @@ class Command():
     
     async def execute(self, context: Context):
         trace.get_current_span().set_attribute("command.context_size", len(context.state))
-        await self.func(context)
+        self.func(context)
 
         
     
@@ -97,7 +96,7 @@ class Chain(Command):
     
     def remove_command(self, command: Command):
         self.commands.remove(command)
-        
+
     async def execute(self, context: Context):
         trace.get_current_span().add_event("chain_start", self.name)
         for command in self.commands:
