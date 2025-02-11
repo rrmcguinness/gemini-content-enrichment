@@ -18,7 +18,7 @@ from fastapi import Response, status, FastAPI, APIRouter, Depends
 from fastapi_throttle import RateLimiter
 from pydantic import ValidationError
 from model.examples import Product, example_category, example_product
-from commands.enrichment import product_enrichment_from_image
+from commands.main import product_enrichment_from_image
 from PIL import Image
 from model.chain import Context
 from model.config import Config
